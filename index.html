@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Rewards">
+<meta name="theme-color" content="#cfe3ff">
+<meta name="robots" content="noindex, nofollow">
+<title>Airtel Rewards Quest</title>
+<link rel="icon" href="assets/img/icon-192.png">
+<link rel="apple-touch-icon" href="assets/img/icon-180.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Press+Start+2P&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="stage">
+  <div id="phone">
+    <div id="app">
+      <div id="page">
+        <section id="game" aria-label="Rewards mini game. Tap to play.">
+          <div id="clouds" class="layer"></div>
+          <div id="title" class="layer">
+            <img class="airtel" src="assets/img/airtel_wordmark.svg" alt="airtel" draggable="false">
+            <div class="rewards-title">
+              <img src="assets/img/rewards_title.png" alt="Rewards" draggable="false">
+              <div class="shine"></div>
+            </div>
+            <p class="ready">Ready to claim</p>
+          </div>
+          <div id="ground"></div>
+          <div id="world"></div>
+          <div id="fx" class="layer"></div>
+          <div id="hud" class="layer">
+            <div class="statusbar">
+              <span>9:41</span>
+              <img src="assets/img/system_icons.svg" alt="" draggable="false">
+            </div>
+            <button class="back" aria-label="Back"><img src="assets/img/caret_left.svg" alt="" draggable="false"></button>
+            <button class="sound" aria-label="Sound on">
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#1c1c1e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 9.5h3.2L12 5.5v13l-4.8-4H4z" fill="#1c1c1e"/>
+                <path class="w1" d="M15.5 9.2a4 4 0 0 1 0 5.6"/>
+                <path class="w2" d="M18.2 6.6a7.6 7.6 0 0 1 0 10.8"/>
+                <path class="x" d="M16 9.5l5 5M21 9.5l-5 5"/>
+              </svg>
+            </button>
+            <div class="coins" title="Long-press for presenter controls">
+              <img src="assets/img/coin_pill.png" alt="" draggable="false">
+              <span id="coinCount">286</span>
+            </div>
+            <div id="tray"></div>
+          </div>
+          <div id="finale" class="layer"></div>
+          <div id="flash" class="layer"></div>
+        </section>
+        <div id="sheet">
+          <div class="grabber"></div>
+          <img class="page-img" src="assets/img/page_top.jpg" width="375" height="855" alt="" draggable="false">
+          <div id="rewardsList"></div>
+          <img class="page-img" src="assets/img/page_bottom.jpg" width="375" height="582" alt="" draggable="false">
+        </div>
+      </div>
+    </div>
+  </div>
+  <aside id="panel">
+    <p class="eyebrow">Prototype · v1</p>
+    <h1>Rewards Quest</h1>
+    <p class="lede">A one-tap mini game at the top of the Airtel Rewards page. Collect three rewards; there's no way to fail.</p>
+    <div class="qr-card">
+      <div id="qr"></div>
+      <p><b>Best on a phone.</b> Scan to play, then use Share › Add to Home Screen for full-screen.</p>
+    </div>
+    <div class="controls" data-controls></div>
+  </aside>
+</div>
+
+<div id="presenter" hidden>
+  <div class="pr-sheet">
+    <div class="pr-head"><b>Presenter controls</b><button class="pr-close" aria-label="Close">✕</button></div>
+    <div class="controls" data-controls></div>
+  </div>
+</div>
+
+<script src="assets/vendor/gsap.min.js"></script>
+<script src="assets/vendor/qrcode.min.js"></script>
+<script src="js/audio.js"></script>
+<script src="js/hero.js"></script>
+<script src="js/game.js"></script>
+</body>
+</html>

@@ -65,3 +65,10 @@ body:not(.framed) #sheet { padding-bottom: 64px; }
 .drop-btn span { font: 800 5.5px/1 var(--ui); letter-spacing: .4px; color: #7a2a00; }
 @keyframes btnglow { 50% { box-shadow: 0 3px 0 #7a3d00, 0 0 18px rgba(255, 210, 90, .95); } }
 .claw-pill { position: absolute; left: 161px; top: 257px; z-index: 6; }
+
+.aimline { position: absolute; left: -1px; top: 0; width: 2px; z-index: 176; pointer-events: none; transition: opacity .2s; background: repeating-linear-gradient(to bottom, rgba(255, 255, 255, .5) 0 4px, transparent 4px 8px); }
+.aimline::after { content: ""; position: absolute; left: 50%; bottom: -3px; width: 14px; height: 5px; margin-left: -7px; border-radius: 50%; background: rgba(255, 255, 255, .35); }
+.aimline.on { background: repeating-linear-gradient(to bottom, #ffe27a 0 4px, transparent 4px 8px); filter: drop-shadow(0 0 3px rgba(255, 220, 120, .95)); }
+.aimline.on::after { background: rgba(255, 226, 122, .85); box-shadow: 0 0 8px rgba(255, 220, 120, .9); }
+.fx-word { margin: -6px 0 0 -40px; width: 80px; text-align: center; z-index: 4; font: 10px/1.2 var(--pixel); color: #fff; text-shadow: 0 2px 0 #9a0018, 0 0 8px rgba(0, 0, 0, .5); }
+.fx-word.good { color: #ffe27a; text-shadow: 0 2px 0 #8a4a00, 0 0 10px rgba(255, 200, 80, .8); }

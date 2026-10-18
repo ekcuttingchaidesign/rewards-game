@@ -1,5 +1,6 @@
-// Game 2, Claw machine: the claw patrols on its own. Tap to drop (or drag to aim, release to drop).
-// Aim assist always lands on a mystery capsule, so every drop wins.
+// Game 2, Claw machine: the claw patrols on its own. Tap to drop it straight down (or drag to aim, release to drop).
+// The claw has to be lined up over a capsule. A miss costs nothing (+2 coins), and every miss widens the
+// grab window and slows the claw; after 2 misses auto-aim kicks in, so nobody gets stuck.
 // Coordinates: "ml" = machine-local points (the cabinet art is 443x411 at scale 1);
 // the glass interior is a 173x198 box at ml (136, 146), and its own coords are ix/iy.
 (function () {
@@ -12,11 +13,14 @@
   const ORIGIN_X = 222;                     // zoom pivot, ml
   const CHUTE_X = 21;                       // ix
   const IDLE_L = 12;                        // rod length at rest
+  const TOL = 9, NEAR = 16, SPEED = 58;     // grab half-width (ix), near-miss band, patrol speed (ix/s)
+  const PATROL = [44, 162];                 // patrol range (ix)
   const CAPS = [{ x: 74, y: 158 }, { x: 110, y: 163 }, { x: 146, y: 156 }];
   const DOOR = { x: 168, y: 367 };          // ml
   const COLORS = [['#ff4d6d', '#c1002f'], ['#ffc23a', '#d27a00'], ['#8f6bff', '#4423c4']];
 
-  let mach, interior, rig, rod, clawSvg, fingers, capsules, pill, doorFlap, dropBtn, marquee, pileItems;
+  let mach, interior, rig, rod, clawSvg, fingers, capsules, pill, doorFlap, dropBtn, marquee, pileItems, aimline;
+  const pileTop = (ix) => 166 - 16 * Math.exp(-(((ix - 105) / 48) ** 2));
   const claw = { x: 105, L: IDLE_L, open: 0, sway: 0, jolt: 0 };   // jolt: brief extra drop of the rod
   const M = { s: 1 };                       // machine zoom
 
@@ -73,12 +77,13 @@
           <div class="rail"></div>
           <div class="pile"></div>
           <div class="chute"><span>PRIZE</span></div>
+          <div class="aimline"></div>
           <div class="rig"><div class="mount"></div><div class="rod"></div><div class="claw-wrap">${CLAW_SVG}</div></div>
           <div class="glass"></div>
         </div>
         <div class="door"><div class="flap"></div></div>
         <div class="drop-btn" role="button" aria-label="Drop the claw"><div class="cap"></div><span>DROP</span></div>
-        <div class="pill claw-pill">${S.pillHTML('Tap to drop')}</div>
+        <div class="pill claw-pill">${S.pillHTML('Tap to play')}</div>
       </div>`;
     mach = scene.querySelector('.machine');
     interior = scene.querySelector('.interior');
@@ -90,11 +95,12 @@
     doorFlap = scene.querySelector('.flap');
     dropBtn = scene.querySelector('.drop-btn');
     marquee = scene.querySelector('.marquee');
+    aimline = scene.querySelector('.aimline');
 
     // prize pile: gold "?" coins, airtel coins and gift boxes heaped towards the middle
     const pile = scene.querySelector('.pile');
     pileItems = [];
-    const top = (ix) => 166 - 16 * Math.exp(-(((ix - 105) / 48) ** 2));
+    const top = pileTop;
     for (let layer = 0; layer < 4; layer++) {
       for (let ix = 46 + sr(0, 10); ix < 172; ix += sr(13, 19)) {
         const y = top(ix) + layer * 9 + sr(-3, 4);
@@ -126,16 +132,20 @@
   }
 
   // ---------------------------------------------------------------- render loop
-  let last = performance.now(), patrolT = 0;
+  let last = performance.now(), patrolP = 0.5, patrolDir = 1;
   const press = { on: false, dragging: false, x0: 0, claw0: 0 };
   function frame(now) {
     const dt = Math.min(0.05, (now - last) / 1000);
     last = now;
     const idleish = state === 'attract' || state === 'wait' || state === 'collected';
     if (idleish && !press.on) {
-      patrolT += dt;
-      const target = 105 + 46 * Math.sin(patrolT * 0.9);
-      claw.x += (target - claw.x) * Math.min(1, dt * 2.5);
+      // constant-speed back-and-forth, so dropping on time is a (gentle) skill
+      const span = PATROL[1] - PATROL[0];
+      patrolP += patrolDir * (patrolSpeed() / span) * dt;
+      if (patrolP > 1) { patrolP = 2 - patrolP; patrolDir = -1; }
+      if (patrolP < 0) { patrolP = -patrolP; patrolDir = 1; }
+      const target = PATROL[0] + span * patrolP;
+      claw.x += (target - claw.x) * Math.min(1, dt * 10);
     }
     rig.style.transform = `translate3d(${claw.x.toFixed(2)}px,0,0)`;
     const L = claw.L + claw.jolt;
@@ -154,9 +164,17 @@
       }
       if (!c.got) placeCapsule(c);
     }
-    if (idleish && state !== 'collected') {
-      const n = nearest();
-      capsules.forEach((c) => c.el.classList.toggle('aim', c === n));
+    // aim line from the claw straight down to the pile; it lights up when a capsule is in the grab window
+    const aiming = state === 'wait';
+    aimline.style.opacity = aiming ? '' : '0';
+    if (aiming) {
+      const tip = 14 + L + 44, n = nearest(), hit = assist() || (n && Math.abs(n.x - claw.x) <= tol());
+      aimline.style.transform = `translate3d(${claw.x.toFixed(2)}px,${tip.toFixed(1)}px,0)`;
+      aimline.style.height = Math.max(0, pileTop(claw.x) - 8 - tip).toFixed(1) + 'px';
+      aimline.classList.toggle('on', !!hit);
+      capsules.forEach((c) => c.el.classList.toggle('aim', !!hit && c === n));
+    } else if (state !== 'busy') {
+      capsules.forEach((c) => c.el.classList.remove('aim'));
     }
     requestAnimationFrame(frame);
   }
@@ -166,7 +184,23 @@
     return best;
   }
 
+  // ---------------------------------------------------------------- difficulty (eases off after every miss)
+  let misses = 0;
+  const tol = () => Math.min(24, TOL + 5 * misses);
+  const assist = () => misses >= 2;
+  const patrolSpeed = () => (state === 'attract' || state === 'collected' ? 34 : SPEED * Math.pow(0.8, misses));
+  function pillText() { return misses === 0 ? 'Line up & drop' : assist() ? 'Auto-aim on' : 'Try again'; }
+
   // ---------------------------------------------------------------- feedback
+  function word(text, ix, iy, good) {
+    const p = inToScreen(ix, iy);
+    const w = S.particle('fx-word' + (good ? ' good' : ''), p.x, p.y);
+    w.textContent = text;
+    gsap.timeline()
+      .fromTo(w, { scale: 0.3, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.3, ease: 'back.out(3)' })
+      .to(w, { y: p.y - 26, opacity: 0, duration: 0.6, ease: 'power1.in' }, '+=0.45')
+      .add(() => w.remove());
+  }
   function jigglePile(x) {
     pileItems.forEach((p) => {
       const d = Math.abs(p.x - x);
@@ -186,14 +220,14 @@
 
   // ---------------------------------------------------------------- game flow
   let state = 'attract';          // attract | wait | busy | finale | collected
-  let collected = 0, queuedAt = -1e9, hintT = 0;
+  let collected = 0, hintT = 0;
 
   function stopHints() { clearTimeout(hintT); }
   function arrive() {
     state = 'wait';
-    if (performance.now() - queuedAt < 450) { queuedAt = -1e9; setTimeout(drop, 140); return; }
     stopHints();
-    hintT = setTimeout(() => S.showPill(pill), 1100);
+    pill.querySelector('span').textContent = pillText();
+    hintT = setTimeout(() => S.showPill(pill), misses ? 300 : 900);
   }
 
   async function startGame() {
@@ -205,7 +239,9 @@
     $('#app').scrollTo({ top: 0, behavior: 'smooth' });
     const H = S.expandedHeight(H_IDLE, 520);
     S.setHeight(H, 0.65);
-    zoomTo(clamp((H - 28 - 8) / 389, 1, 1.25), 0.7);
+    S.hidePill(pill);
+    await zoomTo(clamp((H - 28 - 8) / 389, 1, 1.25), 0.7);
+    if (state === 'wait') arrive();
   }
 
   async function drop() {
@@ -217,18 +253,23 @@
     Sound.play('tap');
     buzz(8);
     const cap = nearest();
+    const dx = Math.abs(cap.x - claw.x);
+    const outcome = assist() || dx <= tol() ? 'grab' : dx <= tol() + NEAR ? 'near' : 'miss';
     capsules.forEach((c) => c.el.classList.remove('aim'));
+    if (outcome !== 'grab') return missed(outcome, cap);
     const k = collected;
-    // down
+    // down (inside the grab window the claw self-centres on the way down)
     Sound.motor(true);
     gsap.to(claw, { open: 1, duration: 0.25 });
     await Promise.all([
-      tw(claw, { x: cap.x, duration: 0.4, ease: 'power2.inOut' }),
+      tw(claw, { x: cap.x, duration: 0.6, ease: 'power2.inOut' }),
       tw(claw, { L: cap.y - 44, duration: 0.85, ease: 'power1.in', delay: 0.08 }),
     ]);
     Sound.motor(false);
     jigglePile(cap.x);
     Sound.play('grab');
+    word(assist() ? 'GOT IT!' : dx <= 3 ? 'PERFECT!' : 'NICE!', cap.x, cap.y - 34, true);
+    misses = 0;
     await tw(claw, { open: 0, duration: 0.16, ease: 'power2.in' });
     cap.held = true;
     cap.el.classList.add('held');
@@ -280,6 +321,49 @@
     arrive();
   }
 
+  // A near miss catches the capsule's edge and it slips back out; a clean miss comes up empty (+2 coins).
+  async function missed(outcome, cap) {
+    const x = claw.x;
+    Sound.motor(true);
+    gsap.to(claw, { open: 1, duration: 0.25 });
+    const depth = outcome === 'near' ? cap.y - 44 : pileTop(x) - 40;
+    await tw(claw, { L: depth, duration: 0.85, ease: 'power1.in', delay: 0.08 });
+    Sound.motor(false);
+    jigglePile(x);
+    Sound.play('grab');
+    await tw(claw, { open: outcome === 'near' ? 0.35 : 0, duration: 0.16, ease: 'power2.in' });
+    await wait(120);
+    Sound.motor(true);
+    if (outcome === 'near') {
+      // lift the capsule a little by its edge, then it slips and bounces back into the pile
+      const side = Math.sign(cap.x - x) || 1;
+      const lift = tw(claw, { L: depth - 26, duration: 0.45, ease: 'power2.out' });
+      gsap.to(cap, { y: cap.y - 22, rot: cap.rot + side * 25, duration: 0.4, ease: 'power2.out', onUpdate: () => placeCapsule(cap) });
+      await lift;
+      Sound.motor(false);
+      Sound.play('tick');
+      gsap.to(claw, { sway: -side * 8, duration: 0.12, yoyo: true, repeat: 1 });
+      word('SO CLOSE!', cap.x, cap.y - 36);
+      const homeX = clamp(cap.home.x + side * rand(2, 5), 60, 156);
+      cap.home = { x: homeX, y: cap.home.y };
+      await tw(cap, { x: homeX, y: cap.home.y, rot: rand(-14, 14), duration: 0.55, ease: 'bounce.out', onUpdate: () => placeCapsule(cap) });
+      Sound.play('land');
+      Sound.motor(true);
+      await tw(claw, { L: IDLE_L, open: 0, duration: 0.6, ease: 'power2.inOut' });
+    } else {
+      const up = tw(claw, { L: IDLE_L, duration: 0.8, ease: 'power2.inOut' });
+      gsap.timeline({ delay: 0.3 }).to(claw, { sway: 7, duration: 0.12 }).to(claw, { sway: -7, duration: 0.14 }).to(claw, { sway: 0, duration: 0.3, ease: 'elastic.out(1, 0.4)' });
+      word('MISSED!', x, pileTop(x) - 40);
+      const p = inToScreen(x, pileTop(x) - 10);
+      setTimeout(() => { Sound.play('coin'); S.addCoins(2, p.x, p.y); }, 350);
+      await up;
+    }
+    Sound.motor(false);
+    buzz(6);
+    misses++;
+    arrive();
+  }
+
   async function finale() {
     state = 'finale';
     Sound.music(false);
@@ -309,11 +393,13 @@
   function reset() {
     collected = 0;
     capsules.forEach((c) => {
+      c.home = CAPS[c.i];
       Object.assign(c, { got: false, held: false, slip: 0, x: c.home.x, y: c.home.y });
       gsap.set(c.el, { opacity: 1 });
       placeCapsule(c);
     });
-    pill.querySelector('span').textContent = 'Tap to drop';
+    misses = 0;
+    pill.querySelector('span').textContent = 'Tap to play';
     pill.classList.remove('button');
     gsap.set(pill, { scale: 1, opacity: 1, y: 0 });
     state = 'attract';
@@ -322,7 +408,7 @@
   // ---------------------------------------------------------------- input: tap to drop, or drag to aim and release
   function unitsPerPx() { return 375 / game.getBoundingClientRect().width / M.s; }
   function onPointerDown(e) {
-    if (state === 'busy' || state === 'finale') { queuedAt = performance.now(); return; }
+    if (state === 'busy' || state === 'finale') return;   // no tap buffering: aiming matters here
     if (state === 'collected') {
       // nothing left: the claw does a happy little shimmy
       Sound.play('hop');
@@ -330,7 +416,7 @@
       jigglePile(claw.x);
       return;
     }
-    if (state === 'attract') startGame();
+    if (state === 'attract') { startGame(); return; }
     press.on = true; press.dragging = false; press.x0 = e.clientX; press.claw0 = claw.x;
     addEventListener('pointermove', onMove);
     addEventListener('pointerup', onUp, { once: true });
@@ -351,9 +437,8 @@
     drop();
   }
   function onTap() {
-    if (state === 'attract') { startGame(); drop(); return; }
+    if (state === 'attract') { startGame(); return; }
     if (state === 'wait') drop();
-    else if (state === 'busy') queuedAt = performance.now();
   }
 
   S.boot({
@@ -371,5 +456,5 @@
     toCollected, reset, onTap, onPointerDown,
     isPlaying: () => state === 'busy' || state === 'wait',
   });
-  window.__arq = { get state() { return state; }, claw, capsules };
+  window.__arq = { get state() { return state; }, get misses() { return misses; }, claw, capsules };
 })();

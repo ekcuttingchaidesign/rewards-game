@@ -9,7 +9,7 @@ Two game concepts on the same link. Switch with the toggle at the bottom of the 
 Mini games for the top of the Airtel Rewards page. In both you collect the user's 3 rewards and there's no way to fail.
 
 - **Platformer:** the hero runs through a short level. Bump the block, stomp the pipe bubble, then bounce off the mushroom.
-- **Claw machine:** the claw patrols on its own. Tap to drop, or drag to aim and release. Aim assist always catches a mystery capsule, which drops down the chute and pops open to reveal the reward.
+- **Claw machine:** the claw patrols back and forth. Line it up over a mystery capsule and tap to drop it straight down (or drag to aim and release). The dotted aim line turns gold when you're on target. A near miss catches the capsule's edge and it slips out ("SO CLOSE!"). A clean miss comes up empty but gives +2 coins. Each miss widens the grab window and slows the claw, and after 2 misses in a row auto-aim switches on, so nobody gets stuck.
 
  Every sound is synthesised in the browser and the hero is drawn in code (`js/hero.js`).
 

@@ -87,7 +87,33 @@
     },
     tick() { tone({ type: 'sine', f: 1250, dur: 0.05, vol: 0.08 }); },
     tap() { tone({ type: 'sine', f: 900, f2: 1300, dur: 0.05, vol: 0.06 }); },
+    grab() { noise({ filter: 'highpass', f: 2500, dur: 0.04, vol: 0.2 }); tone({ type: 'square', f: 240, f2: 120, dur: 0.07, vol: 0.08 }); },
+    drop() { tone({ type: 'triangle', f: 420, f2: 140, dur: 0.18, vol: 0.2 }); },
+    clunk() { tone({ type: 'triangle', f: 95, f2: 48, dur: 0.2, vol: 0.4 }); noise({ f: 700, dur: 0.1, vol: 0.22 }); },
   };
+
+  // claw motor: a low buzzy hum with a fast tremolo, started and stopped around each move
+  let motorNodes = null;
+  function motor(on) {
+    if (!ctx || !enabled) { on = false; }
+    if (on && !motorNodes) {
+      const t = ctx.currentTime;
+      const osc = ctx.createOscillator(), f = ctx.createBiquadFilter(), g = ctx.createGain(), lfo = ctx.createOscillator(), lg = ctx.createGain();
+      osc.type = 'sawtooth'; osc.frequency.value = 62;
+      f.type = 'lowpass'; f.frequency.value = 520;
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.05, t + 0.06);
+      lfo.frequency.value = 16; lg.gain.value = 0.02;
+      lfo.connect(lg); lg.connect(g.gain);
+      osc.connect(f); f.connect(g); g.connect(sfx);
+      osc.start(); lfo.start();
+      motorNodes = { osc, lfo, g };
+    } else if (!on && motorNodes) {
+      const { osc, lfo, g } = motorNodes, t = ctx.currentTime;
+      g.gain.cancelScheduledValues(t); g.gain.setValueAtTime(g.gain.value, t); g.gain.linearRampToValueAtTime(0, t + 0.08);
+      osc.stop(t + 0.1); lfo.stop(t + 0.1);
+      motorNodes = null;
+    }
+  }
 
   // Background loop: original 4-bar tune, 150 BPM in 8ths.
   const MEL = 'E5 - G5 A5 G5 - E5 C5 D5 - E5 G5 E5 - D5 - C5 - E5 G5 A5 - C6 A5 G5 - E5 D5 E5 - - -'.split(' ');
@@ -124,7 +150,7 @@
   }
 
   window.Sound = {
-    unlock, music, setEnabled,
+    unlock, music, motor, setEnabled,
     get enabled() { return enabled; },
     play(name) { if (ctx && enabled && SFX[name]) SFX[name](); },
   };

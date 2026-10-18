@@ -8,14 +8,15 @@
 <meta name="apple-mobile-web-app-title" content="Rewards">
 <meta name="theme-color" content="#cfe3ff">
 <meta name="robots" content="noindex, nofollow">
-<title>Airtel Rewards Quest</title>
+<title>Rewards Quest</title>
 <link rel="icon" href="assets/img/icon-192.png">
 <link rel="apple-touch-icon" href="assets/img/icon-180.png">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Press+Start+2P&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Press+Start+2P&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/claw.css">
 </head>
 <body>
 <div id="stage">
@@ -23,17 +24,7 @@
     <div id="app">
       <div id="page">
         <section id="game" aria-label="Rewards mini game. Tap to play.">
-          <div id="clouds" class="layer"></div>
-          <div id="title" class="layer">
-            <img class="airtel" src="assets/img/airtel_wordmark.svg" alt="airtel" draggable="false">
-            <div class="rewards-title">
-              <img src="assets/img/rewards_title.png" alt="Rewards" draggable="false">
-              <div class="shine"></div>
-            </div>
-            <p class="ready">Ready to claim</p>
-          </div>
-          <div id="ground"></div>
-          <div id="world"></div>
+          <div id="scene"></div>
           <div id="fx" class="layer"></div>
           <div id="hud" class="layer">
             <div class="statusbar">
@@ -60,9 +51,9 @@
         </section>
         <div id="sheet">
           <div class="grabber"></div>
-          <img class="page-img" src="assets/img/page_top.jpg" width="375" height="855" alt="" draggable="false">
+          <img class="page-img" id="pageTop" width="375" alt="" draggable="false">
           <div id="rewardsList"></div>
-          <img class="page-img" src="assets/img/page_bottom.jpg" width="375" height="582" alt="" draggable="false">
+          <img class="page-img" id="pageBottom" width="375" alt="" draggable="false">
         </div>
       </div>
     </div>
@@ -70,7 +61,7 @@
   <aside id="panel">
     <p class="eyebrow">Prototype · v1</p>
     <h1>Rewards Quest</h1>
-    <p class="lede">A one-tap mini game at the top of the Airtel Rewards page. Collect three rewards; there's no way to fail.</p>
+    <p class="lede">Mini-game concepts for the top of the Rewards page. Collect three rewards; there's no way to fail. Switch games below.</p>
     <div class="qr-card">
       <div id="qr"></div>
       <p><b>Best on a phone.</b> Scan to play, then use Share › Add to Home Screen for full-screen.</p>
@@ -78,6 +69,8 @@
     <div class="controls" data-controls></div>
   </aside>
 </div>
+
+<nav id="switcher" aria-label="Choose a game"></nav>
 
 <div id="presenter" hidden>
   <div class="pr-sheet">
@@ -90,6 +83,8 @@
 <script src="assets/vendor/qrcode.min.js"></script>
 <script src="js/audio.js"></script>
 <script src="js/hero.js"></script>
-<script src="js/game.js"></script>
+<script src="js/shell.js"></script>
+<script src="js/platformer.js"></script>
+<script src="js/claw.js"></script>
 </body>
 </html>

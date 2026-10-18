@@ -46,6 +46,28 @@
     <circle cx="0" cy="16" r="3.4" fill="#ffe2a0" stroke="#7a4a0c" stroke-width=".6"/>
   </svg>`;
 
+  // A thick gold coin with a bevelled rim and an embossed "?", seen tilted by T (1 = face-on).
+  function coinURI(T) {
+    const e = 1.5 + (1 - T) * 7, cy = 24 - e / 2, ry = 21 * T, ri = 16.5 * T;
+    const q = `font-family="Arial Black,Arial,sans-serif" font-weight="900" font-size="21" text-anchor="middle" transform="translate(0 ${cy}) scale(1 ${T}) translate(0 ${-cy})"`;
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+      <defs>
+        <linearGradient id="e" x1="0" x2="1"><stop offset="0" stop-color="#6b3a00"/><stop offset=".28" stop-color="#cf9012"/><stop offset=".52" stop-color="#ffd966"/><stop offset=".78" stop-color="#b47006"/><stop offset="1" stop-color="#6b3a00"/></linearGradient>
+        <linearGradient id="r" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff2b0"/><stop offset=".45" stop-color="#e3a523"/><stop offset="1" stop-color="#8a5200"/></linearGradient>
+        <radialGradient id="f" cx=".36" cy=".3" r=".85"><stop offset="0" stop-color="#fff7cf"/><stop offset=".28" stop-color="#ffe07a"/><stop offset=".62" stop-color="#f1b12a"/><stop offset="1" stop-color="#b56f08"/></radialGradient>
+        <radialGradient id="s" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#fff" stop-opacity=".95"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+      </defs>
+      <ellipse cx="24" cy="${cy + e}" rx="21" ry="${ry}" fill="url(#e)"/>
+      <rect x="3" y="${cy}" width="42" height="${e}" fill="url(#e)"/>
+      <ellipse cx="24" cy="${cy}" rx="21" ry="${ry}" fill="url(#r)"/>
+      <ellipse cx="24" cy="${cy}" rx="16.5" ry="${ri}" fill="url(#f)" stroke="#a86504" stroke-opacity=".55" stroke-width=".9"/>
+      <text x="23.2" y="${cy + 7.2}" fill="#fff4b8" ${q}>?</text>
+      <text x="24" y="${cy + 8}" fill="#c27e0b" ${q}>?</text>
+      <ellipse cx="16" cy="${cy - 9 * T}" rx="8" ry="${3.6 * T}" fill="url(#s)" transform="rotate(-24 16 ${cy - 9 * T})"/>
+    </svg>`;
+    return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+  }
+
   const capsuleHTML = (c) => `<div class="cap-halo"></div>
     <div class="cap-bot"></div><div class="cap-top" style="--c1:${c[0]};--c2:${c[1]}"></div><div class="cap-band"></div>
     <span class="cap-q">?</span>`;
@@ -76,6 +98,7 @@
           <div class="lamp l1"></div><div class="lamp l2"></div>
           <div class="rail"></div>
           <div class="pile"></div>
+          <div class="sheen"></div>
           <div class="chute"><span>PRIZE</span></div>
           <div class="aimline"></div>
           <div class="rig"><div class="mount"></div><div class="rod"></div><div class="claw-wrap">${CLAW_SVG}</div></div>
@@ -97,22 +120,27 @@
     marquee = scene.querySelector('.marquee');
     aimline = scene.querySelector('.aimline');
 
-    // prize pile: gold "?" coins, airtel coins and gift boxes heaped towards the middle
+    // prize pile: chunky gold "?" coins, airtel coins, gold balls and gift boxes heaped towards the middle.
+    // Back layers are darker for depth; coins lie tilted (squashed vertically) like they're resting in a heap.
     const pile = scene.querySelector('.pile');
     pileItems = [];
-    const top = pileTop;
-    for (let layer = 0; layer < 4; layer++) {
-      for (let ix = 46 + sr(0, 10); ix < 172; ix += sr(13, 19)) {
-        const y = top(ix) + layer * 9 + sr(-3, 4);
+    const qCoins = [1, 0.78, 0.6].map(coinURI);
+    const SHADE = [0.6, 0.76, 0.9, 1.04, 1.1];
+    for (let layer = 0; layer < 5; layer++) {
+      for (let ix = 40 + sr(0, 9); ix < 174; ix += sr(11, 16)) {
+        const y = pileTop(ix) + layer * 8 + sr(-3, 3);
         const kind = srand();
+        let w, cls, inner, tilt = 1;
+        if (kind < 0.45) { w = sr(19, 25); cls = 'p-coin'; inner = `<img src="${qCoins[Math.floor(sr(0, 3))]}" alt="" draggable="false">`; }
+        else if (kind < 0.68) { w = sr(18, 23); cls = 'p-coin'; inner = imgTag('coin.png'); tilt = sr(0.62, 1); }
+        else if (kind < 0.84 && layer < 4) { w = sr(16, 21); cls = 'p-gift'; inner = '<i></i>'; }
+        else { w = sr(9, 13); cls = 'p-ball'; inner = ''; }
         const el = document.createElement('div');
-        let w;
-        if (kind < 0.42) { w = sr(18, 23); el.className = 'p-coin q'; el.innerHTML = '<i>?</i>'; }
-        else if (kind < 0.72) { w = sr(17, 22); el.className = 'p-coin'; el.innerHTML = imgTag('coin.png'); }
-        else { w = sr(16, 21); el.className = 'p-gift'; el.innerHTML = '<i></i>'; }
-        el.style.cssText = `left:${(ix - w / 2).toFixed(1)}px;top:${(y - w / 2).toFixed(1)}px;width:${w.toFixed(1)}px;height:${w.toFixed(1)}px;z-index:${Math.round(y / 2)};--r:${sr(-35, 35).toFixed(0)}deg;--sx:${el.className === 'p-gift' ? 1 : sr(0.55, 1).toFixed(2)}`;
+        el.className = 'p-item ' + cls;
+        el.innerHTML = `<div class="in">${inner}</div>`;
+        el.style.cssText = `left:${(ix - w / 2).toFixed(1)}px;top:${(y - w / 2).toFixed(1)}px;width:${w.toFixed(1)}px;height:${w.toFixed(1)}px;z-index:${Math.round(y / 2)};--r:${sr(-30, 30).toFixed(0)}deg;--t:${tilt.toFixed(2)};--b:${SHADE[layer]}`;
         pile.appendChild(el);
-        pileItems.push({ el, x: ix, y });
+        pileItems.push({ el, x: ix, y, w, layer, coin: cls === 'p-coin' });
       }
     }
     capsules = CAPS.map((c, i) => {
@@ -202,9 +230,19 @@
       .add(() => w.remove());
   }
   function jigglePile(x) {
-    pileItems.forEach((p) => {
+    let flips = 0;
+    pileItems.filter((p) => Math.abs(p.x - x) < 34).sort((a, b) => b.layer - a.layer).forEach((p) => {
       const d = Math.abs(p.x - x);
-      if (d < 34) gsap.fromTo(p.el, { y: 0 }, { y: -rand(2, 6) * (1 - d / 34), duration: 0.12, yoyo: true, repeat: 1, ease: 'power2.out' });
+      if (p.coin && flips < 3 && p.layer >= 2) {
+        // a few coins flip and hop out of the way
+        flips++;
+        gsap.timeline()
+          .to(p.el, { y: -rand(10, 18), x: (p.x < x ? -1 : 1) * rand(2, 6), rotationY: 180, duration: 0.22, ease: 'power2.out' })
+          .to(p.el, { y: 0, x: 0, rotationY: 360, duration: 0.32, ease: 'bounce.out' })
+          .set(p.el, { rotationY: 0 });
+      } else {
+        gsap.fromTo(p.el, { y: 0 }, { y: -rand(2, 6) * (1 - d / 34), duration: 0.12, yoyo: true, repeat: 1, ease: 'power2.out' });
+      }
     });
     if (!RM) {
       for (let i = 0; i < 3; i++) {
@@ -213,6 +251,21 @@
       }
     }
   }
+  // little star glints that pop on random coins near the top of the heap
+  function twinkle() {
+    if (RM || document.hidden) return;
+    const pool = pileItems.filter((p) => p.layer >= 2 && p.y < 186);
+    const p = pool[Math.floor(Math.random() * pool.length)];
+    if (!p) return;
+    const t = document.createElement('div');
+    t.className = 'twinkle';
+    t.style.left = (p.x + rand(-p.w / 3, p.w / 3)).toFixed(1) + 'px';
+    t.style.top = (p.y - p.w / 3).toFixed(1) + 'px';
+    pileItems[0].el.parentNode.appendChild(t);
+    gsap.timeline().fromTo(t, { scale: 0, rotation: -30 }, { scale: rand(0.7, 1.15), rotation: 15, duration: 0.25, ease: 'back.out(3)' })
+      .to(t, { scale: 0, rotation: 60, duration: 0.35, ease: 'power2.in' }).add(() => t.remove());
+  }
+
   function pressButton() {
     gsap.timeline().to(dropBtn, { scaleY: 0.82, y: 2, duration: 0.06 }).to(dropBtn, { scaleY: 1, y: 0, duration: 0.3, ease: 'elastic.out(1, 0.4)' });
   }
@@ -450,6 +503,7 @@
     start(done) {
       if (!done) state = 'attract';
       requestAnimationFrame((t) => { last = t; frame(t); });
+      setInterval(twinkle, 420);
       // the marquee flickers on like a real arcade sign
       gsap.fromTo(marquee, { opacity: 0.4 }, { opacity: 1, duration: 0.08, repeat: 5, yoyo: true, delay: 0.3 });
     },

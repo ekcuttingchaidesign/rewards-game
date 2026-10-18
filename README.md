@@ -2,7 +2,7 @@
 
 **▶ Play it here: https://ekcuttingchaidesign.github.io/rewards-game/**
 
-Two game concepts on the same link. Switch with the toggle at the bottom of the screen (phone) or in the side panel (desktop):
+Two game concepts on the same link. Open one with the links below, or switch from the side panel on desktop or the presenter controls on a phone (long-press the coin pill):
 - **Platformer**: https://ekcuttingchaidesign.github.io/rewards-game/?g=platformer
 - **Claw machine**: https://ekcuttingchaidesign.github.io/rewards-game/?g=claw
 

@@ -337,7 +337,6 @@
         <span>${PROFILES[id].map((k) => REWARDS[k].name).join(', ')}</span></button>`).join('')}
       <div class="ctl-row"><button class="ctl-btn" data-reset>Reset game</button><button class="ctl-btn ghost" data-sound>Sound: on</button></div>`;
     document.querySelectorAll('[data-controls]').forEach((c) => { c.innerHTML = html; });
-    $('#switcher').innerHTML = switchHTML();
     document.querySelectorAll('[data-game]').forEach((b) => b.addEventListener('click', (e) => { e.stopPropagation(); if (b.dataset.game !== gameId) go(b.dataset.game, profileId); }));
     document.querySelectorAll('[data-profile]').forEach((b) => b.addEventListener('click', () => go(gameId, b.dataset.profile)));
     document.querySelectorAll('[data-reset]').forEach((b) => b.addEventListener('click', () => {

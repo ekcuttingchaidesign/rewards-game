@@ -334,8 +334,8 @@
     claw: '<path d="M4 3.2h16M12 3.2v4.6"/><rect x="9.4" y="7.8" width="5.2" height="2.6" rx="1"/><path d="M10 10.4 5.8 14.6l2.4 4M14 10.4l4.2 4.2-2.4 4"/><circle cx="12" cy="18.3" r="2.4"/>',
   };
   function tabsHTML() {
-    return Object.keys(GAMES).map((id) => `<button class="${id === gameId ? 'on' : ''}" data-game="${id}" aria-current="${id === gameId}">
-      <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${TAB_ICONS[id]}</svg></span>${GAMES[id]}</button>`).join('');
+    return '<div class="track">' + Object.keys(GAMES).map((id) => `<button class="${id === gameId ? 'on' : ''}" data-game="${id}" aria-current="${id === gameId}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${TAB_ICONS[id]}</svg>${GAMES[id]}</button>`).join('') + '</div>';
   }
   function buildControls() {
     const html = `<h3>Game</h3><div class="seg">${switchHTML()}</div>
@@ -355,16 +355,6 @@
     document.querySelectorAll('[data-sound]').forEach((b) => b.addEventListener('click', () => { Sound.unlock(); applySound(!Sound.enabled); }));
   }
   buildControls();
-
-  // Netlify's free plan pins a "Powered by Netlify" badge to the bottom-right corner; lift the tabs above it
-  const fitBadge = () => {
-    const f = $('#nl-badge-frame');
-    const h = f && f.isConnected && f.dataset.nlReady ? Math.max(0, f.offsetHeight - 8) : 0;   // frame has 8px of top padding
-    document.body.style.setProperty('--nf-badge', h + 'px');
-  };
-  const watchBadge = (f) => { new MutationObserver(fitBadge).observe(f, { attributes: true, attributeFilter: ['style', 'data-nl-ready'] }); fitBadge(); };
-  const badgeHunt = new MutationObserver(() => { const f = $('#nl-badge-frame'); if (f) { badgeHunt.disconnect(); watchBadge(f); } });
-  if ($('#nl-badge-frame')) watchBadge($('#nl-badge-frame')); else badgeHunt.observe(document.body, { childList: true });
 
   // long-press the coin pill (or press P) to open presenter controls on a phone
   const presenter = $('#presenter');

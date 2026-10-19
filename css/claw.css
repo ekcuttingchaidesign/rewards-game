@@ -3,7 +3,7 @@
 .seg { display: flex; gap: 3px; padding: 3px; border-radius: 12px; background: #e6e7eb; }
 .seg button { flex: 1; padding: 9px 8px; border-radius: 9px; font: 600 13px/1 var(--ui); color: #4a4d55; }
 .seg button.on { background: #fff; color: var(--ink); box-shadow: 0 1px 3px rgba(0, 0, 0, .12); }
-#tabbar { position: sticky; bottom: 0; z-index: 30; display: flex; padding: 7px 16px calc(6px + env(safe-area-inset-bottom)); background: rgba(255, 255, 255, .9); -webkit-backdrop-filter: blur(18px) saturate(1.6); backdrop-filter: blur(18px) saturate(1.6); box-shadow: 0 -.5px 0 rgba(0, 0, 0, .14); }
+#tabbar { position: sticky; bottom: 0; z-index: 30; display: flex; padding: 7px 16px calc(6px + max(env(safe-area-inset-bottom), var(--nf-badge, 0px))); background: rgba(255, 255, 255, .9); -webkit-backdrop-filter: blur(18px) saturate(1.6); backdrop-filter: blur(18px) saturate(1.6); box-shadow: 0 -.5px 0 rgba(0, 0, 0, .14); }
 #tabbar button { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 2px 0; font: 600 11px/1.1 var(--ui); color: #8a8d95; -webkit-tap-highlight-color: transparent; transition: color .2s; }
 #tabbar button .ic { display: grid; place-items: center; width: 56px; height: 30px; border-radius: 15px; transition: background .2s, transform .2s; }
 #tabbar button svg { width: 24px; height: 24px; }

@@ -356,6 +356,16 @@
   }
   buildControls();
 
+  // Netlify's free plan pins a "Powered by Netlify" badge to the bottom-right corner; lift the tabs above it
+  const fitBadge = () => {
+    const f = $('#nl-badge-frame');
+    const h = f && f.isConnected && f.dataset.nlReady ? Math.max(0, f.offsetHeight - 8) : 0;   // frame has 8px of top padding
+    document.body.style.setProperty('--nf-badge', h + 'px');
+  };
+  const watchBadge = (f) => { new MutationObserver(fitBadge).observe(f, { attributes: true, attributeFilter: ['style', 'data-nl-ready'] }); fitBadge(); };
+  const badgeHunt = new MutationObserver(() => { const f = $('#nl-badge-frame'); if (f) { badgeHunt.disconnect(); watchBadge(f); } });
+  if ($('#nl-badge-frame')) watchBadge($('#nl-badge-frame')); else badgeHunt.observe(document.body, { childList: true });
+
   // long-press the coin pill (or press P) to open presenter controls on a phone
   const presenter = $('#presenter');
   let lpT = 0;

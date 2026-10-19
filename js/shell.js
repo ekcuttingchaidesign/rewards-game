@@ -329,6 +329,14 @@
   function switchHTML() {
     return Object.keys(GAMES).map((id) => `<button class="${id === gameId ? 'on' : ''}" data-game="${id}">${GAMES[id]}</button>`).join('');
   }
+  const TAB_ICONS = {
+    platformer: '<rect x="3.5" y="3.5" width="17" height="17" rx="3.5"/><path d="M9.5 9.6a2.5 2.5 0 1 1 3.7 2.2c-.8.4-1.2.9-1.2 1.7v.3"/><circle cx="12" cy="16.7" r=".5" fill="currentColor"/>',
+    claw: '<path d="M4 3.2h16M12 3.2v4.6"/><rect x="9.4" y="7.8" width="5.2" height="2.6" rx="1"/><path d="M10 10.4 5.8 14.6l2.4 4M14 10.4l4.2 4.2-2.4 4"/><circle cx="12" cy="18.3" r="2.4"/>',
+  };
+  function tabsHTML() {
+    return Object.keys(GAMES).map((id) => `<button class="${id === gameId ? 'on' : ''}" data-game="${id}" aria-current="${id === gameId}">
+      <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${TAB_ICONS[id]}</svg></span>${GAMES[id]}</button>`).join('');
+  }
   function buildControls() {
     const html = `<h3>Game</h3><div class="seg">${switchHTML()}</div>
       <h3>Who is playing</h3>
@@ -337,7 +345,8 @@
         <span>${PROFILES[id].map((k) => REWARDS[k].name).join(', ')}</span></button>`).join('')}
       <div class="ctl-row"><button class="ctl-btn" data-reset>Reset game</button><button class="ctl-btn ghost" data-sound>Sound: on</button></div>`;
     document.querySelectorAll('[data-controls]').forEach((c) => { c.innerHTML = html; });
-    document.querySelectorAll('[data-game]').forEach((b) => b.addEventListener('click', (e) => { e.stopPropagation(); if (b.dataset.game !== gameId) go(b.dataset.game, profileId); }));
+    $('#tabbar').innerHTML = tabsHTML();
+    document.querySelectorAll('[data-game]').forEach((b) => b.addEventListener('click', (e) => { e.stopPropagation(); if (b.dataset.game === gameId) return; document.querySelectorAll('#tabbar button').forEach((t) => t.classList.toggle('on', t === b)); go(b.dataset.game, profileId); }));
     document.querySelectorAll('[data-profile]').forEach((b) => b.addEventListener('click', () => go(gameId, b.dataset.profile)));
     document.querySelectorAll('[data-reset]').forEach((b) => b.addEventListener('click', () => {
       Object.keys(GAMES).forEach((g) => Object.keys(PROFILES).forEach((p) => store.set(`done:${g}:${p}`, null)));
